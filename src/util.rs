@@ -10,15 +10,6 @@ pub fn wide_str(value: &str) -> Vec<u16> {
     OsStr::new(value).encode_wide().chain(once(0)).collect()
 }
 
-pub unsafe fn try_get_base_address(module_name: &str) -> Option<usize> {
-    let w_module_name = wide_str(module_name);
-
-    match GetModuleHandleW(PCWSTR::from_raw(w_module_name.as_ptr())) {
-        Ok(module) => Some(module.0 as usize),
-        Err(_) => None
-    }
-}
-
 // VMProtect hooks NtProtectVirtualMemory to prevent changing protection of executable segments
 // We use this trick to remove hook
 pub unsafe fn disable_memprotect_guard() {

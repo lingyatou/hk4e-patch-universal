@@ -3,10 +3,10 @@
 use std::{sync::RwLock, time::Duration};
 
 use lazy_static::lazy_static;
-use util::try_get_base_address;
-use windows::Win32::Foundation::HINSTANCE;
+use windows::core::PCSTR;
 use windows::Win32::System::Console;
 use windows::Win32::System::SystemServices::DLL_PROCESS_ATTACH;
+use windows::Win32::{Foundation::HINSTANCE, System::LibraryLoader::GetModuleHandleA};
 
 mod interceptor;
 mod marshal;
@@ -16,7 +16,7 @@ mod util;
 use crate::modules::{Http, MhyContext, ModuleManager, Security};
 
 unsafe fn thread_func() {
-    let base = try_get_base_address("GenshinImpact.exe").unwrap();
+    let base = GetModuleHandleA(PCSTR::null()).unwrap().0 as usize;
 
     std::thread::sleep(Duration::from_secs(12));
 
