@@ -48,9 +48,11 @@ unsafe extern "win64" fn on_make_initial_url(reg: *mut Registers, _: usize) {
         new_url.push_str(s);
     });
 
-    println!("Redirect: {url} -> {new_url}");
-    (*reg).rcx =
-        marshal::ptr_to_string_ansi(CString::new(new_url.as_str()).unwrap().as_c_str()) as u64;
+    if !url.contains("/query_cur_region") {
+        println!("Redirect: {url} -> {new_url}");
+        (*reg).rcx =
+            marshal::ptr_to_string_ansi(CString::new(new_url.as_str()).unwrap().as_c_str()) as u64;
+    }
 }
 
 unsafe extern "win64" fn on_browser_load_url(reg: *mut Registers, _: usize) {

@@ -5,9 +5,11 @@ use anyhow::Result;
 use crate::interceptor::Interceptor;
 
 mod http;
+mod misc;
 mod security;
 
 pub use http::Http;
+pub use misc::Misc;
 pub use security::Security;
 
 #[derive(Default)]
@@ -38,6 +40,7 @@ impl ModuleManager {
 pub enum ModuleType {
     Http,
     Security,
+    Misc,
 }
 
 pub trait MhyModule {
