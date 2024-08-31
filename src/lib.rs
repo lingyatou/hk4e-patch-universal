@@ -3,7 +3,7 @@
 use std::{sync::RwLock, time::Duration};
 
 use lazy_static::lazy_static;
-use modules::Misc;
+use modules::{CcpBlocker, Misc};
 use windows::core::PCSTR;
 use windows::Win32::System::Console;
 use windows::Win32::System::SystemServices::DLL_PROCESS_ATTACH;
@@ -18,8 +18,12 @@ use crate::modules::{Http, MhyContext, ModuleManager, Security};
 
 unsafe fn thread_func() {
     let base = GetModuleHandleA(PCSTR::null()).unwrap().0 as usize;
+    let mut module_manager = MODULE_MANAGER.write().unwrap();
 
-    std::thread::sleep(Duration::from_secs(12));
+    // Block query_security_file ASAP
+    module_manager.enable(MhyContext::<CcpBlocker>::new(base));
+
+    std::thread::sleep(Duration::from_secs(14));
 
     util::disable_memprotect_guard();
     Console::AllocConsole().unwrap();
@@ -27,7 +31,6 @@ unsafe fn thread_func() {
     println!("Genshin Impact encryption patch\nMade by xeondev\nTo work with XilonenImpact: git.xeondev.com/reversedrooms/XilonenImpact");
     println!("Base: {:X}", base);
 
-    let mut module_manager = MODULE_MANAGER.write().unwrap();
     module_manager.enable(MhyContext::<Http>::new(base));
     module_manager.enable(MhyContext::<Security>::new(base));
     module_manager.enable(MhyContext::<Misc>::new(base));
