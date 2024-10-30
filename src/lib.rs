@@ -28,7 +28,7 @@ unsafe fn thread_func() {
     util::disable_memprotect_guard();
     Console::AllocConsole().unwrap();
 
-    println!("Genshin Impact encryption patch\nMade by xeondev\nTo work with XilonenImpact: git.xeondev.com/reversedrooms/XilonenImpact");
+    println!("Genshin Impact encryption patch\nMade by xeondev\nTo work with sakura-rs: git.xeondev.com/sakura-rs/sakura-rs");
     println!("Base: {:X}", base);
 
     module_manager.enable(MhyContext::<Http>::new(base));
@@ -43,6 +43,7 @@ lazy_static! {
 }
 
 #[no_mangle]
+#[allow(non_snake_case)]
 unsafe extern "system" fn DllMain(_: HINSTANCE, call_reason: u32, _: *mut ()) -> bool {
     if call_reason == DLL_PROCESS_ATTACH {
         std::thread::spawn(|| thread_func());

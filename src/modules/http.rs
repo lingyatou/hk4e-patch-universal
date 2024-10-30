@@ -5,8 +5,8 @@ use crate::marshal;
 use anyhow::Result;
 use ilhook::x64::Registers;
 
-const WEB_REQUEST_UTILS_MAKE_INITIAL_URL: usize = 0xFFDA8B0;
-const BROWSER_LOAD_URL: usize = 0xFE06E40;
+const WEB_REQUEST_UTILS_MAKE_INITIAL_URL: usize = 0x10421E00;
+const BROWSER_LOAD_URL: usize = 0x10222B20;
 
 pub struct Http;
 

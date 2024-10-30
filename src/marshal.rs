@@ -2,7 +2,7 @@ use std::ffi::CStr;
 
 use windows::{core::PCSTR, Win32::System::LibraryLoader::GetModuleHandleA};
 
-const PTR_TO_STRING_ANSI: usize = 0xF33F640;
+const PTR_TO_STRING_ANSI: usize = 0xF85E020;
 type MarshalPtrToStringAnsi = unsafe extern "fastcall" fn(*const u8) -> *const u8;
 
 pub unsafe fn ptr_to_string_ansi(content: &CStr) -> *const u8 {
