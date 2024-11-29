@@ -4,7 +4,7 @@ use ilhook::x64::Registers;
 
 pub struct Misc;
 
-const SET_CUSTOM_PROPERTY_FLOAT: usize = 0x12199F0;
+const SET_CUSTOM_PROPERTY_FLOAT: usize = 0xF3EF50;
 
 impl MhyModule for MhyContext<Misc> {
     unsafe fn init(&mut self) -> Result<()> {

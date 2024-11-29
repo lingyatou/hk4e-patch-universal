@@ -28,7 +28,7 @@ unsafe fn thread_func() {
     util::disable_memprotect_guard();
     Console::AllocConsole().unwrap();
 
-    println!("Genshin Impact encryption patch\nMade by xeondev\nTo work with sakura-rs: git.xeondev.com/sakura-rs/sakura-rs");
+    println!("Genshin Impact encryption patch\nMade by xeondev\nTo work with mavuika-rs: git.xeondev.com/mavuika-rs/mavuika-rs");
     println!("Base: {:X}", base);
 
     module_manager.enable(MhyContext::<Http>::new(base));

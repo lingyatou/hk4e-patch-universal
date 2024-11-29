@@ -6,9 +6,9 @@ use super::{MhyContext, MhyModule, ModuleType};
 use anyhow::Result;
 use ilhook::x64::Registers;
 
-const MHYRSA_PERFORM_CRYPTO_ACTION: usize = 0x95ED88;
-const KEY_SIGN_CHECK: usize = 0x960C7C;
-const SDK_UTIL_RSA_ENCRYPT: usize = 0xFC0CC30;
+const MHYRSA_PERFORM_CRYPTO_ACTION: usize = 0x46C788;
+const KEY_SIGN_CHECK: usize = 0x46E67C;
+const SDK_UTIL_RSA_ENCRYPT: usize = 0xFE733C0;
 
 const KEY_SIZE: usize = 268;
 static SERVER_PUBLIC_KEY: &[u8] = include_bytes!("../../server_public_key.bin");
