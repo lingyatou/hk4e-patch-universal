@@ -53,15 +53,15 @@ pub trait MhyModule {
 }
 
 pub struct MhyContext<T> {
-    pub assembly_base: usize,
+    pub assembly_name: &'static str,
     pub interceptor: Interceptor,
     _phantom: std::marker::PhantomData<T>,
 }
 
 impl<T> MhyContext<T> {
-    pub const fn new(assembly_base: usize) -> Self {
+    pub const fn new(assembly_name: &'static str) -> Self {
         Self {
-            assembly_base,
+            assembly_name,
             interceptor: Interceptor::new(),
             _phantom: std::marker::PhantomData,
         }

@@ -4,21 +4,45 @@ use super::{MhyContext, MhyModule, ModuleType};
 use crate::marshal;
 use anyhow::Result;
 use ilhook::x64::Registers;
+use crate::util;
 
-const WEB_REQUEST_UTILS_MAKE_INITIAL_URL: usize = 0x10660380;
-const BROWSER_LOAD_URL: usize = 0x1048D9A0;
+const WEB_REQUEST_UTILS_MAKE_INITIAL_URL: &str = "55 41 56 56 57 53 48 81 EC ?? ?? ?? ?? 48 8D AC 24 ?? ?? ?? ?? 48 C7 45 ?? ?? ?? ?? ?? 48 89 D6 48 89 CF 48 8B 0D ?? ?? ?? ??";
+const BROWSER_LOAD_URL: &str = "41 B0 01 E9 08 00 00 00 0F 1F 84 00 00 00 00 00 56 57";
+const BROWSER_LOAD_URL_OFFSET: usize = 0x10;
 
 pub struct Http;
 
 impl MhyModule for MhyContext<Http> {
     unsafe fn init(&mut self) -> Result<()> {
-        self.interceptor.attach(
-            self.assembly_base + WEB_REQUEST_UTILS_MAKE_INITIAL_URL,
-            on_make_initial_url,
-        )?;
 
-        self.interceptor
-            .attach(self.assembly_base + BROWSER_LOAD_URL, on_browser_load_url)
+        let web_request_utils_make_initial_url = util::pattern_scan_il2cpp(self.assembly_name, WEB_REQUEST_UTILS_MAKE_INITIAL_URL);
+        if let Some(addr) = web_request_utils_make_initial_url {
+            println!("web_request_utils_make_initial_url: {:x}", addr as usize);
+            self.interceptor.attach(
+                addr as usize,
+                on_make_initial_url,
+            )?;
+        }
+        else
+        {
+            println!("Failed to find web_request_utils_make_initial_url");
+        }
+
+        let browser_load_url = util::pattern_scan_il2cpp(self.assembly_name, BROWSER_LOAD_URL);
+        if let Some(addr) = browser_load_url {
+            let addr_offset = addr as usize + BROWSER_LOAD_URL_OFFSET;
+            println!("browser_load_url: {:x}", addr_offset);
+            self.interceptor.attach(
+                addr_offset,
+                on_browser_load_url,
+            )?;
+        }
+        else
+        {
+            println!("Failed to find browser_load_url");
+        }
+        
+        Ok(())
     }
 
     unsafe fn de_init(&mut self) -> Result<()> {

@@ -1,13 +1,14 @@
 #![feature(str_from_utf16_endian)]
 
-use std::{sync::RwLock, time::Duration};
+use std::{sync::RwLock};
 
 use lazy_static::lazy_static;
 use modules::{CcpBlocker, Misc};
-use windows::core::PCSTR;
 use windows::Win32::System::Console;
 use windows::Win32::System::SystemServices::DLL_PROCESS_ATTACH;
-use windows::Win32::{Foundation::HINSTANCE, System::LibraryLoader::GetModuleHandleA};
+use windows::Win32::{Foundation::HINSTANCE, System::LibraryLoader::GetModuleFileNameA};
+use std::ffi::CStr;
+use std::path::Path;
 
 mod interceptor;
 mod marshal;
@@ -17,23 +18,33 @@ mod util;
 use crate::modules::{Http, MhyContext, ModuleManager, Security};
 
 unsafe fn thread_func() {
-    let base = GetModuleHandleA(PCSTR::null()).unwrap().0 as usize;
     let mut module_manager = MODULE_MANAGER.write().unwrap();
 
     // Block query_security_file ASAP
-    module_manager.enable(MhyContext::<CcpBlocker>::new(base));
-
-    std::thread::sleep(Duration::from_secs(14));
+    module_manager.enable(MhyContext::<CcpBlocker>::new(""));
 
     util::disable_memprotect_guard();
     Console::AllocConsole().unwrap();
 
-    println!("Genshin Impact encryption patch\nMade by xeondev\nTo work with mavuika-rs: git.xeondev.com/mavuika-rs/mavuika-rs");
-    println!("Base: {:X}", base);
+    println!("Genshin Impact encryption patch\nMade by xeondev\n(Modded for all version > 5.0)");
 
-    module_manager.enable(MhyContext::<Http>::new(base));
-    module_manager.enable(MhyContext::<Security>::new(base));
-    module_manager.enable(MhyContext::<Misc>::new(base));
+    let mut buffer = [0u8; 260];
+    GetModuleFileNameA(None, &mut buffer);
+    let exe_path = CStr::from_ptr(buffer.as_ptr() as *const i8).to_str().unwrap();
+    let exe_name = Path::new(exe_path).file_name().unwrap().to_str().unwrap();
+    println!("Current executable name: {}", exe_name);
+
+    if exe_name != "GenshinImpact.exe" && exe_name != "YuanShen.exe" {
+        println!("Executable is not Genshin. Skipping initialization.");
+        return;
+    }
+
+    println!("Initializing modules...");
+
+    module_manager.enable(MhyContext::<Security>::new(&exe_name));
+    marshal::find();
+    module_manager.enable(MhyContext::<Http>::new(&exe_name));
+    module_manager.enable(MhyContext::<Misc>::new(&exe_name));
 
     println!("Successfully initialized!");
 }
@@ -46,7 +57,14 @@ lazy_static! {
 #[allow(non_snake_case)]
 unsafe extern "system" fn DllMain(_: HINSTANCE, call_reason: u32, _: *mut ()) -> bool {
     if call_reason == DLL_PROCESS_ATTACH {
-        std::thread::spawn(|| thread_func());
+        #[cfg(debug_assertions)]
+        {
+            thread_func();
+        }
+        #[cfg(not(debug_assertions))]
+        {
+            std::thread::spawn(|| thread_func());
+        }
     }
 
     true
