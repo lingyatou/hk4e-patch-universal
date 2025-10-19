@@ -8,25 +8,14 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        include:
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-          - os: windows-latest
-            target: x86_64-pc-windows-gnu
-          - os: macos-latest
-            target: x86_64-apple-darwin
 
     steps:
-      # 1️⃣ Checkout
+      # 1️⃣ 检出仓库
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2️⃣ 安装系统依赖（Ubuntu）
+      # 2️⃣ 安装系统依赖
       - name: Install system dependencies
-        if: matrix.os == 'ubuntu-latest'
         run: sudo apt-get update && sudo apt-get install -y pkg-config libssl-dev build-essential
 
       # 3️⃣ 安装 Rust
@@ -38,29 +27,31 @@ jobs:
 
       # 4️⃣ 构建 Release
       - name: Build Release
-        run: cargo build --release --target ${{ matrix.target }}
+        run: cargo build --release --verbose
 
-      # 5️⃣ 测试
+      # 5️⃣ 运行测试
       - name: Run Tests
-        run: cargo test --verbose --target ${{ matrix.target }}
+        run: cargo test --verbose
 
       # 6️⃣ 上传 artifact
       - name: Upload Release Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: hk4e-patch-universal-${{ matrix.target }}
-          path: target/${{ matrix.target }}/release/
-          
+          name: hk4e-patch-universal
+          path: target/release/
+
   release:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      # 1️⃣ 下载 artifact
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: hk4e-patch-universal-x86_64-unknown-linux-gnu
+          name: hk4e-patch-universal
           path: release_files
 
+      # 2️⃣ 创建 GitHub Release
       - name: Create GitHub Release
         id: create_release
         uses: ncipollo/release-action@v1
@@ -69,6 +60,7 @@ jobs:
           name: "hk4e-patch-universal v${{ github.run_number }}"
           body: "Automated release from GitHub Actions"
 
+      # 3️⃣ 上传二进制到 Release
       - name: Upload binaries to release
         uses: softprops/action-gh-release@v1
         with:
