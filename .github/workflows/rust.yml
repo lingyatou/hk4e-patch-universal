@@ -1,36 +1,77 @@
-name: Rust Build & Artifact
+name: Build & Release hk4e-patch-universal
 
 on:
   push:
     branches: [ "main", "master" ]
-  pull_request:
-    branches: [ "main", "master" ]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: windows-latest
+            target: x86_64-pc-windows-gnu
+          - os: macos-latest
+            target: x86_64-apple-darwin
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      # 1️⃣ Checkout
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Install system dependencies
-      run: sudo apt-get update && sudo apt-get install -y pkg-config libssl-dev build-essential
+      # 2️⃣ 安装系统依赖（Ubuntu）
+      - name: Install system dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get update && sudo apt-get install -y pkg-config libssl-dev build-essential
 
-    - name: Install Rust
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-        override: true
+      # 3️⃣ 安装 Rust
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
 
-    - name: Build Release
-      run: cargo build --release --verbose
+      # 4️⃣ 构建 Release
+      - name: Build Release
+        run: cargo build --release --target ${{ matrix.target }}
 
-    - name: Run Tests
-      run: cargo test --verbose
+      # 5️⃣ 测试
+      - name: Run Tests
+        run: cargo test --verbose --target ${{ matrix.target }}
 
-    - name: Upload Release Artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: hk4e-patch-universal
-        path: target/release/
+      # 6️⃣ 上传 artifact
+      - name: Upload Release Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hk4e-patch-universal-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/
+          
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: hk4e-patch-universal-x86_64-unknown-linux-gnu
+          path: release_files
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: v${{ github.run_number }}
+          name: "hk4e-patch-universal v${{ github.run_number }}"
+          body: "Automated release from GitHub Actions"
+
+      - name: Upload binaries to release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release_files/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
