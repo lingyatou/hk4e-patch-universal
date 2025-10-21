@@ -62,9 +62,9 @@ unsafe extern "win64" fn on_make_initial_url(reg: *mut Registers, _: usize) {
     let url = String::from_utf16le(slice).unwrap();
 
     let mut new_url = if url.contains("/query_region_list") {
-        String::from("http://8.138.225.248:22101")
-    } else {
         String::from("http://8.138.225.248:8888")
+    } else {
+        String::from("http://8.138.225.248:22101")
     };
 
     url.split('/').skip(3).for_each(|s| {
