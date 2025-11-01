@@ -76,7 +76,7 @@ impl MhyModule for MhyContext<Security> {
 
 unsafe extern "win64" fn after_key_sign_check(reg: *mut Registers, _: usize) {
     println!("key sign check!");
-    (*reg).rax = 1;
+    (*reg).rax = 1
 }
 
 unsafe extern "win64" fn on_mhy_rsa(reg: *mut Registers, _: usize) {
