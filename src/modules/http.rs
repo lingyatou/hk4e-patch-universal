@@ -90,7 +90,7 @@ unsafe extern "win64" fn on_browser_load_url(reg: *mut Registers, _: usize) {
         std::slice::from_raw_parts(slice.as_ptr() as *const u16, str_length as usize)
     });
 
-    let mut new_url = String::from("http://8.138.225.248:22101");
+    let mut new_url = String::from("http://8.138.225.248:8888");
     url.split('/').skip(3).for_each(|s| {
         new_url.push_str("/");
         new_url.push_str(s);
