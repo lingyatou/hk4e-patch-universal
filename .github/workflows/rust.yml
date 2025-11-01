@@ -1,65 +1,64 @@
-name: Build & Release hk4e-patch-universal
+name: Windows Build & Release
 
 on:
   push:
-    branches: [ "main", "master" ]
-  workflow_dispatch:
+    branches: [ "main" ]
+  workflow_dispatch:  # 可手动触发
 
 jobs:
-  build:
+  build-windows:
     runs-on: windows-latest
 
     steps:
-      # 1️⃣ 检出仓库
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2️⃣ 安装 Rust nightly
-      - name: Install Rust nightly
+      - name: Install Rust (nightly)
         uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
+          target: x86_64-pc-windows-msvc
           override: true
 
-      # 3️⃣ 构建 Release
-      - name: Build Release
-        run: cargo build --release --verbose
+      - name: Install Visual Studio Build Tools
+        uses: microsoft/setup-msbuild@v1.1
+        with:
+          vs-version: 'latest'
+          include-windows-sdk: true
 
-      # 4️⃣ 运行测试
-      - name: Run Tests
-        run: cargo test --verbose
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry-${{ hashFiles('**/Cargo.lock') }}
 
-      # 5️⃣ 上传 artifact
-      - name: Upload Release Artifact
+      - name: Cache cargo git
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          key: cargo-git-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build release
+        run: cargo build --release
+
+      - name: Prepare artifact
+        run: |
+          mkdir -p release
+          copy target\release\*.exe release\
+          copy target\release\*.dll release\
+
+      - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: hk4e-patch-universal
-          path: target\release\*
+          name: hk4e-patch-windows
+          path: release\*
 
-  release:
-    needs: build
-    runs-on: windows-latest
-    steps:
-      # 1️⃣ 下载 artifact
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: hk4e-patch-universal
-          path: release_files
-
-      # 2️⃣ 创建 GitHub Release
       - name: Create GitHub Release
-        id: create_release
         uses: ncipollo/release-action@v1
         with:
           tag: v${{ github.run_number }}
-          name: "hk4e-patch-universal v${{ github.run_number }}"
-          body: "Automated release from GitHub Actions"
-
-      # 3️⃣ 上传二进制到 Release
-      - name: Upload binaries to release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: release_files\*
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: "hk4e-patch-windows v${{ github.run_number }}"
+          body: "Automated Windows build from GitHub Actions"
+          draft: false
+          prerelease: false
+          artifacts: release\*
